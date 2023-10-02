@@ -1,0 +1,111 @@
+﻿@page "/mainform"
+
+@using System.Timers
+
+
+<style>
+    form .row {
+        margin-bottom: 16px;
+    }
+</style>
+
+<div class="row">
+    <div class="row">
+        <RadzenFieldset Text="서버 명령" Style="margin-bottom: 20px; width: 900px; ">
+            <div class="row">
+                <RadzenCheckBox @bind-Value=@checkBoxValueAutoServerStatus Name="CheckBox1" TValue="bool" Change=@(args => OnChange(args, "CheckBox1 CheckBox")) Style="margin-bottom: 20px; margin-left: 5px; " />
+                <RadzenLabel Text="자동 서버 상태 갱신 off" Component="CheckBox1" Style="margin-bottom: 20px; width: 200px; margin-left: 5px; " />
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <RadzenButton Click=@(args => OnClick("Button with text")) Text="Server On" Style="margin-bottom: 20px; width: 150px; " />
+                    <RadzenButton Click=@(args => OnClick("Button with text")) Text="Server Off" Style="margin-bottom: 20px; width: 150px; " />
+                    <RadzenButton Click=@(args => OnClick("Button with text")) Text="Server Update" Style="margin-bottom: 20px; width: 200px; " />
+                    <RadzenButton Click=@(args => OnClick("Button with text")) Text="LB On" Style="margin-bottom: 20px; width: 150px; " />
+                    <RadzenButton Click=@(args => OnClick("Button with text")) Text="LB Off" Style="margin-bottom: 20px; width: 150px; " />
+                </div>
+            </div>
+        </RadzenFieldset>
+    </div>
+
+    <div class="row" Style="margin-bottom: 20px; ">
+        <RadzenDataGrid @ref="grid" Count="@count" Data="@employees" LoadData="@LoadData" AllowSorting="true" AllowFiltering="true" AllowPaging="true" PageSize="4" TItem="Employee" ColumnWidth="150px">
+            <Columns>
+                <RadzenDataGridColumn TItem="Employee" Property="EmployeeID" Filterable="false" Title="ID" Frozen="true" Width="50px" TextAlign="TextAlign.Center" />
+                <RadzenDataGridColumn TItem="Employee" Property="FirstName" Title="Host Name" />
+                <RadzenDataGridColumn TItem="Employee" Property="LastName" Title="Server Name" Width="150px" />
+                <RadzenDataGridColumn TItem="Employee" Property="Title" Title="Version" />
+                <RadzenDataGridColumn TItem="Employee" Property="TitleOfCourtesy" Title="on/off" />
+                <RadzenDataGridColumn TItem="Employee" Property="Address" Title="LB on/off" />
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+    <div class="row">
+        <RadzenFieldset Text="로그" Style="margin-bottom: 20px; width: 900px; ">
+            <RadzenListBox @bind-Value=@value Data="@customers" Style="height: 200px; width: 800px;" />
+        </RadzenFieldset>
+    </div>
+</div>
+
+@code {   
+    bool checkBoxValueAutoServerStatus = false;
+    Timer timer = new(2000);
+
+    RadzenDataGrid<Employee> grid;
+    int count;
+    IEnumerable<Employee> employees;
+
+    string value = "ALFKI";
+    IEnumerable<Customer> customers;
+
+
+    // 페이지가 처음 호출 되었을 때
+    protected override void OnInitialized()
+    {
+        timer.Elapsed += (sender, eventArgs) => OnTimerCallback();
+        timer.Start();
+    }
+
+
+    private void OnTimerCallback()
+    {
+        _ = InvokeAsync(() =>
+        {
+            //currentCount++;
+            //StateHasChanged();
+            
+            CallAAA();
+        });
+    }
+
+
+    void OnChange(bool? value, string name)
+    {
+        //console.Log($"{name} value changed to {value}");
+    }
+
+    void OnClick(string buttonName)
+    {
+        //console.Log($"{buttonName} clicked");
+    }
+
+    void LoadData(LoadDataArgs args)
+    {
+        @*var query = dbContext.Employees.AsQueryable();
+
+            if (!string.IsNullOrEmpty(args.Filter))
+            {
+                query = query.Where(args.Filter);
+            }
+
+            if (!string.IsNullOrEmpty(args.OrderBy))
+            {
+                query = query.OrderBy(args.OrderBy);
+            }
+
+            count = query.Count();
+
+            employees = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();*@
+    }
+}

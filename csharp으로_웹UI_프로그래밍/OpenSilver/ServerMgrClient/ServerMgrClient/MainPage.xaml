@@ -1,0 +1,23 @@
+﻿<Page
+    x:Class="ServerMgrClient.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:ServerMgrClient"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Canvas>
+        <CheckBox Name="isServerStatusAutoUpdate" Content="서버 상태 자동 업데이트" Checked="CheckBox_Checked"  FontSize="14" Foreground="#FFBC7D3A" Canvas.Left="10" Canvas.Top="10"/>
+
+        <Button Grid.Row="1" Content="호스트 리스트 요청" Click="Button_Click" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="10" Canvas.Top="40"/>
+        
+        <DataGrid AutoGenerateColumns="False" HorizontalAlignment="Left" Name="dataGrid1" VerticalAlignment="Top" MinRowHeight="20"  Canvas.Left="10" Canvas.Top="70">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}" />
+                <DataGridTextColumn Header="Host Name" Binding="{Binding HostName}" />
+                <DataGridTextColumn Header="Program Name" Binding="{Binding ProgramName}" />
+            </DataGrid.Columns>
+        </DataGrid>
+    </Canvas>
+    
+</Page>

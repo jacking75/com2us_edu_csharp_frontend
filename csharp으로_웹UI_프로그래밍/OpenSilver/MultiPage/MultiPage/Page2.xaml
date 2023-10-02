@@ -1,0 +1,10 @@
+﻿<Page
+    x:Class="MultiPage.Page2"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:MultiPage">
+    
+    <Grid>
+        <TextBlock Text="Hello World! Page2" x:Name="TextBlock12"/>
+    </Grid>
+</Page>

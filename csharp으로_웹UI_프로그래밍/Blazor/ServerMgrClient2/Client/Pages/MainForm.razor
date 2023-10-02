@@ -1,0 +1,59 @@
+﻿@page "/mainForm"
+
+@using System.ComponentModel
+@using AntDesign.TableModels
+
+@using System.Timers
+
+@inject HttpClient Http
+
+
+<div>
+    <Row>
+        <Col Span="24">
+        <Checkbox @bind-Checked="checkBoxValueAutoServerStatus" Disabled="false">
+            @($"자동 서버 상태 갱신-{(checkBoxValueAutoServerStatus ? "on" : "off")}")
+        </Checkbox>
+        </Col>
+    </Row>
+    <Row>
+        <Col Span="24">
+        <Button>Server On</Button>
+        <Button>Server Off</Button>
+        <Button>Server Update</Button>
+        <Button>LB On</Button>
+        <Button>LB Off</Button>
+        </Col>
+    </Row>
+    <Row>
+        <Table TItem="ServerStatusData" DataSource="@severStatusList" @bind-SelectedRows="selectedRows" OnRowClick="OnRowClick">
+            <Selection Key="@(context.Id.ToString())" />
+            <Column @bind-Field="@context.Id"></Column>
+            <Column @bind-Field="@context.HostName"></Column>
+            <Column @bind-Field="@context.ServerName"></Column>
+            <Column @bind-Field="@context.Version"></Column>
+            <Column @bind-Field="@context.Status"></Column>
+            <Column @bind-Field="@context.LBStatus"></Column>
+        </Table>
+    </Row>
+</div>
+
+
+@code {
+    bool checkBoxValueAutoServerStatus = false;
+
+    Timer serverStatusTimer = new(2000);
+
+
+    IEnumerable<ServerStatusData> selectedRows;
+
+    List<ServerStatusData> severStatusList = new();
+  
+
+
+    void OnRowClick(RowData<ServerStatusData> row)
+    {
+        Console.WriteLine($"row {row.Data.Id} was clicked.");
+    }
+  
+}

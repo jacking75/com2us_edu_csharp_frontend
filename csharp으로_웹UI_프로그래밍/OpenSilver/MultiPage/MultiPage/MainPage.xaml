@@ -1,0 +1,17 @@
+﻿<Page
+    x:Class="MultiPage.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:MultiPage"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Frame x:Name="PageContainer" JournalOwnership="Automatic" Margin="5,0,0,30" HorizontalContentAlignment="Stretch">
+    <Canvas>
+        <TextBlock Text="Hello World!" x:Name="TextBlock1" Canvas.Left="20" Canvas.Top="30"/>
+
+        <Button Grid.Row="1" Content="Go Page1" Click="Button_Click" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="20" Canvas.Top="60"/>
+        <Button Grid.Row="1" Content="Go Page2" Click="Button_Click_1" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="80" Canvas.Top="60"/>
+    </Canvas>
+    </Frame>
+</Page>

@@ -1,0 +1,72 @@
+﻿@page "/Lookup_Multiple_Users"
+@using System.ComponentModel.DataAnnotations;
+@using System.ComponentModel
+@using AntDesign.TableModels
+@using AntDesign.Core.Extensions
+@using ManagingTool.Shared.DTO
+@inject UserService UserDataService
+@inject IConfirmService ConfirmService
+@inject NavigationManager NavigationManager
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inherits AuthPage
+
+
+<h3>Lookup Multiple Users</h3>
+
+<SimpleSelect DefaultValue="UserID" Style="width:200px;" OnSelectedItemChanged="handleChange">
+    <SelectOptions>
+        <SimpleSelectOption Value="UserID" Label="UserID"></SimpleSelectOption>
+        <SimpleSelectOption Value="Level" Label="Level"></SimpleSelectOption>
+        <SimpleSelectOption Value="Money" Label="Money"></SimpleSelectOption>
+        <SimpleSelectOption Value="BestClearStage" Label="BestClearStage"></SimpleSelectOption>
+        <SimpleSelectOption Value="LastLogin" Label="LastLogin"></SimpleSelectOption>
+    </SelectOptions>
+</SimpleSelect>
+
+<br />
+<br />
+
+<div class="mb-3">
+    Min:
+    <input type="number" @bind="minValue" class="form-label" name="Min">Min</input>
+    Max:
+    <input type="number" @bind="maxValue" class="form-label" name="Max">Max</input>
+    <button class="btn btn-primary" @onclick="GetMultipleUserBasicInfo">Search</button>
+</div>
+
+
+<Table TItem="UserInfo" DataSource="@userDataSet">
+    <GenerateColumns Range="0.." Definitions=definitions />
+</Table>
+
+@code {
+    Int64 userId = 0;
+    string category = "UserID";
+    Int64 minValue = 0;
+    Int64 maxValue = 0;
+
+    List<UserInfo> userDataSet = new();
+
+    void handleChange(string value)
+    {
+        category = value;
+    }
+
+    void definitions(string propertyName, object column)
+    {
+        column.SetValue("Sortable", true);
+        column.SetValue("Filterable", true);
+    }
+
+    async Task GetMultipleUserBasicInfo()
+    {
+        userDataSet.Clear();
+
+        userDataSet = await UserDataService.GetMultipleUserBasicInfo(category, minValue, maxValue);
+    }
+}
+
+
+
+
+

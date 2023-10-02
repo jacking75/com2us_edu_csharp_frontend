@@ -1,0 +1,131 @@
+﻿@page "/RetrieveItem"
+@using AntDesign.TableModels
+@using AntDesign.Core.Extensions
+@inject ItemService ItemService
+@inject MailService MailService
+@inject IMessageService _message
+@inject INotificationService _notice
+
+<h3>Retrieve Item</h3>
+
+<div>
+    <RadioGroup @bind-Value="@searchType">
+        <Radio RadioButton Value="@("ItemID")">ItemID</Radio>
+        <Radio RadioButton Value="@("ItemCode")">ItemCode</Radio>
+        <Radio RadioButton Value="@("UserID")">UserID</Radio>
+    </RadioGroup>
+</div>
+
+<div class="mb-3">
+    Input Number:
+    <input type="number" @bind="searchValue" class="form-label" name="SearchValue">Input Number</input>
+    <button class="btn btn-primary" @onclick="GetUserItemList">Search</button>
+</div>
+
+<Table TItem="UserItem" DataSource="@UserItemDataSet" @bind-SelectedRows="selectedRows">
+    <Selection Key="@(context.ItemId.ToString())" Disabled="@(context.IsDestroyed == true)" />
+    <GenerateColumns Range="0.." Definitions=definitions />
+</Table>
+
+<Button Type="primary" OnClick="@(()=>{ if (selectedRows != null && selectedRows.Count() != 0) _visible = true; else ErrorMessage(); })">
+    Retrieve
+</Button>
+
+@{
+    RenderFragment footer =
+    @<Template>
+        <Button OnClick="@(async ()=>{ await RetrieveButtonClick(); await SuccessMessage();})"
+                Type="primary" Loading="@_loading">
+            Confirm
+        </Button>
+        <Button OnClick="@(()=>{ _visible = false; })">Cancel</Button>
+    </Template>;
+}
+
+<Modal Title="!WARNING!"
+       Visible="@_visible"
+       Footer="@footer">
+    <p>이 행동은 되돌릴 수 없습니다. 정말로 데이터를 삭제하시겠습니까?</p>
+</Modal>
+
+<div>
+    <Checkbox @bind-Checked="sendMail">
+       Send Mail When Retrieve Item
+    </Checkbox>
+</div>
+
+
+@code
+{
+    string searchType = "ItemID";
+    Int64 searchValue = 0;
+    IEnumerable<UserItem> selectedRows;
+    bool sendMail = true;
+    bool _visible = false;
+    bool _loading = false;
+
+    List<UserItem> UserItemDataSet = new();
+
+    MailForm? mailForm = new MailForm
+    {
+        Title = "Retrieve Item",
+        Content = "Your Item has been retrieved.",
+        ItemCode = 0,
+        ItemCount = 0
+    };
+
+    void definitions(string propertyName, object column)
+    {
+        column.SetValue("Sortable", true);
+        column.SetValue("Filterable", true);
+    }
+
+    async Task RetrieveButtonClick()
+    {
+        await RetrieveUserItem();
+        _visible = false;
+    }
+
+    async Task SuccessMessage()
+    {
+        await _message.Success("Retrieve Item Success!", 10);
+    }
+
+    async Task ErrorMessage()
+    {
+        await _message.Error("No Selected Item!");
+    }
+
+    async Task GetUserItemList()
+    {
+        UserItemDataSet.Clear();
+
+        var response = await ItemService.GetUserItemList(searchType, searchValue);
+        UserItemDataSet = response.UserItem;
+    }
+
+    async Task RetrieveUserItem()
+    {
+        if (selectedRows.Count() != 0)
+        {
+            _loading = true;
+
+            if (sendMail == true)
+            {
+                var response = await ItemService.RetrieveUserItem(selectedRows, mailForm);
+            }
+            else
+            {
+                var response = await ItemService.RetrieveUserItem(selectedRows, null);
+            }
+
+            await GetUserItemList();
+
+            _loading = false;
+        }
+        else
+        {
+            await ErrorMessage();
+        }
+    }
+}

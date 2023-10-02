@@ -1,0 +1,32 @@
+﻿@inject NavigationManager NavigationManager
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+
+<Header Class="header" Style="width:100%">
+    <div style="display:inline-block; margin-right:1.5vw;">
+        <h4 style="color:white"><Icon Type="setting" Theme="outline" /> ManagingTool</h4>
+    </div>
+    <Menu Theme="MenuTheme.Dark" Mode="MenuMode.Horizontal" Style="display:inline-block">
+        <MenuItem Key="1" RouterLink="/Lookup_Specific_User">
+            <Icon Type="user" Theme="outline" />
+            Lookup Specific User
+        </MenuItem>
+        <MenuItem Key="2" RouterLink="/Lookup_Multiple_Users">
+            <Icon Type="user" Theme="outline" />
+            Lookup Multiple Users
+        </MenuItem>
+        <MenuItem Key="3" @onclick="Logout">
+            <Icon Type="logout" Theme="outline" />
+            Logout
+        </MenuItem>
+    </Menu>
+</Header>
+
+@code {
+
+    async Task Logout()
+    {
+        await sessionStorage.RemoveItemAsync("accesstoken");
+        await sessionStorage.RemoveItemAsync("refreshtoken");
+        NavigationManager.NavigateTo("/");
+    }
+}

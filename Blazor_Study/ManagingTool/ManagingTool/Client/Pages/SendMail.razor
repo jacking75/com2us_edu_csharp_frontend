@@ -1,0 +1,165 @@
+﻿@page "/SendMail"
+@inject ItemService ItemService
+@inject MailService MailService
+@inject IMessageService _message
+
+@*@inject Blazored.LocalStorage.ILocalStorageService localStorage*@
+
+
+<h3>Send Mail</h3>
+
+<div class="mb-3">
+    UserID:
+    <input type="number" @bind="userId" @bind:event="oninput" class="form-label" name="UserID">UserID</input>
+</div>
+
+<div>
+    Title:
+    <TextArea ShowCount Placeholder="메일 제목을 입력해주세요" MaxLength=100 OnChange="onChange_title" AutoSize="false" />
+    Content:
+    <TextArea ShowCount Placeholder="메일 내용을 입력해주세요" MaxLength=2000 OnChange="onChange_content" AutoSize="true" />
+</div>
+
+<br />
+<br />
+
+<Select TItem="ItemAttribute"
+        TItemValue="ItemAttribute"
+        DataSource="@itemList"
+        @bind-Value="@selectedItem"
+        LabelName="@nameof(ItemAttribute.Name)"
+        EnableSearch
+        DefaultValue=null
+        Placeholder="Select an Item"
+        OnSelectedItemChanged="OnSelectedItemChangedHandler"
+        SortByLabel="@SortDirection.Ascending"
+        AllowClear
+        Style="width: calc(100% - 68px);">
+</Select>
+<Dropdown Style="padding-left: 8px;" Trigger="@(new Trigger[] { Trigger.Click })">
+    <Overlay>
+        <Menu Selectable="false">
+            <MenuItem OnClick="@SetWeaponList">Weapon LIst</MenuItem>
+            <MenuItem OnClick="@SetArmorList">Armor List</MenuItem>
+            <MenuItem OnClick="@SetClothesList">Clothes List</MenuItem>
+            <MenuItem OnClick="@SetMagicToolList">MagicTool List</MenuItem>
+            <MenuItem OnClick="@ClearDS">Clear</MenuItem>
+        </Menu>
+    </Overlay>
+    <ChildContent>
+        <a class="ant-dropdown-link" @onclick:preventDefault>Actions<Icon Type="down" /></a>
+    </ChildContent>
+</Dropdown>
+<br />
+<br />
+<p>
+    Selected Item: @selectedItem?.Name <br />
+    Selected ItemCode: @selectedItem?.Code <br />
+    ItemCount:
+    <input type="number" @bind="itemCount" class="form-label" name="ItemCount">ItemCount</input>
+</p>
+
+<button class="btn btn-primary" @onclick="SendMailByUserID">Send</button>
+
+@code {
+
+
+    string title = string.Empty;
+    string content = string.Empty;
+
+    Int64 userId = 0;
+    Int64 itemCount = 0;
+
+    List<ItemAttribute> itemList = new List<ItemAttribute>();
+
+    ItemTable itemTable = new ItemTable();
+    ItemAttribute selectedItem = new ItemAttribute();
+    MailForm mailForm = new MailForm();
+
+    class ItemTable
+    {
+        public List<ItemAttribute> itemWeapon { get; set; }
+        public List<ItemAttribute> itemArmor { get; set; }
+        public List<ItemAttribute> itemClothes { get; set; }
+        public List<ItemAttribute> itemMagicTool { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var itemTableData = await ItemService.GetItemTable();
+
+        itemTable.itemWeapon = itemTableData.Item_Weapon;
+        itemTable.itemArmor = itemTableData.Item_Armor;
+        itemTable.itemClothes = itemTableData.Item_Clothes;
+        itemTable.itemMagicTool = itemTableData.Item_MagicTool;
+
+        itemList = itemTable.itemWeapon;
+    }
+
+    void onChange_title(string value)
+    {
+        title = value;
+    }
+
+    void onChange_content(string value)
+    {
+        content = value;
+    }
+
+    void OnSelectedItemChangedHandler(ItemAttribute value)
+    {
+        selectedItem = value;
+    }
+
+    void SetWeaponList()
+    {
+        itemList = itemTable.itemWeapon;
+    }
+
+    void SetArmorList()
+    {
+        itemList = itemTable.itemArmor;
+    }
+
+    void SetClothesList()
+    {
+        itemList = itemTable.itemClothes;
+    }
+
+    void SetMagicToolList()
+    {
+        itemList = itemTable.itemMagicTool;
+    }
+
+    private void ClearDS()
+    {
+        itemList = null;
+        selectedItem = null;
+    }
+
+    private async Task SendMailByUserID()
+    {
+        mailForm.Title = title;
+        mailForm.Content = content;
+        mailForm.ItemCode = selectedItem.Code;
+        mailForm.ItemCount = itemCount;
+
+        if (userId == 0)
+        {
+            await _message.Error("Please Write UserID!");
+            return;
+        }
+
+        if (mailForm.Title == string.Empty || mailForm.Content == string.Empty)
+        {
+            await _message.Error("Please Write Title and Content!");
+            return;
+        }
+
+        var isSuccess = await MailService.SendMail(mailForm, userId);
+        if (isSuccess.errorCode == ErrorCode.None)
+        {
+            await _message.Success("Send Mail Success!");
+        }
+    }
+}

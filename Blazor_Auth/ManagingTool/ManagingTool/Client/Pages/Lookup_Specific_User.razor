@@ -1,0 +1,274 @@
+﻿@page "/Lookup_Specific_User"
+@using System.ComponentModel.DataAnnotations;
+@using System.ComponentModel
+@using AntDesign.TableModels
+@using AntDesign.Core.Extensions
+@inject UserService UserDataService
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inherits AuthPage
+
+<h3>Lookup Specific User</h3>
+
+<div class="mb-3">
+    UserID:
+    <input type="number" @bind="userId" class="form-label" name="UserID">UserID</input>
+    <button class="btn btn-primary" @onclick="GetUserData" >Search</button>
+</div>
+
+<Tabs @bind-ActiveKey="@activeKey" Animated>
+    <TabPane Tab="BasicInfo" Key="1">
+        <Table TItem="UserInfo" DataSource="@userDataSet" RowClassName="@(_=>"editable-row")">
+           <ChildContent Context="data">
+                    <PropertyColumn Property="c=>c.AccountID" Sortable="true" Filterable="true" />
+                    <PropertyColumn Property="c=>c.UserID" Sortable="true" Filterable="true" />
+                    <PropertyColumn Property="c=>c.Level" Sortable="true" Filterable="true">
+                        @if (!editCache.ContainsKey(data.UserID) || !editCache[data.UserID].edit)
+                        {
+                            @data.Level
+                        }
+                        else
+                        {
+                            <Input @bind-Value="editCache[data.UserID].data.Level" />
+                        }
+                    </PropertyColumn>
+                    <PropertyColumn Property="c=>c.Exp" Sortable="true" Filterable="true">
+                        @if (!editCache.ContainsKey(data.UserID) || !editCache[data.UserID].edit)
+                        {
+                            @data.Exp
+                        }
+                        else
+                        {
+                            <Input @bind-Value="editCache[data.UserID].data.Exp" />
+                        }
+                    </PropertyColumn>
+                    <PropertyColumn Property="c=>c.Money" Sortable="true" Filterable="true">
+                        @if (!editCache.ContainsKey(data.UserID) || !editCache[data.UserID].edit)
+                        {
+                            @data.Money
+                        }
+                        else
+                        {
+                            <Input @bind-Value="editCache[data.UserID].data.Money" />
+                        }
+                    </PropertyColumn>
+                    <PropertyColumn Property="c=>c.BestClearStage" Sortable="true" Filterable="true">
+                        @if (!editCache.ContainsKey(data.UserID) || !editCache[data.UserID].edit)
+                        {
+                            @data.BestClearStage
+                        }
+                        else
+                        {
+                            <Input @bind-Value="editCache[data.UserID].data.BestClearStage" />
+                        }
+                    </PropertyColumn>
+                    <PropertyColumn Property="c=>c.LastLogin" Sortable="true" Filterable="true">
+                    </PropertyColumn>
+                    <ActionColumn Title="Action">
+                        @if (!editCache.ContainsKey(data.UserID) || !editCache[data.UserID].edit)
+                        {
+                            <a @onclick="() => startEdit(data.UserID)" class="edit">Edit</a>
+                        }
+                        else
+                        {
+                            <Popconfirm Title="Sure to Save?"
+                                OnConfirm="() => saveEdit(data.UserID)"
+                                OkText="Yes"
+                                CancelText="No">
+                                <a class="save">Save</a>
+                            </Popconfirm>
+                            <a @onclick="() => cancelEdit(data.UserID)">Cancel</a>
+                        }
+                    </ActionColumn>
+            </ChildContent>
+        </Table>
+    </TabPane>
+    <TabPane Tab="Item" Key="2">
+        <Table TItem="UserItem" DataSource="@userItemDataSet">
+            <GenerateColumns Range="0.." Definitions=definitions />
+        </Table>
+    </TabPane>
+    <TabPane Tab="Mail" Key="3">
+        <Table TItem="MailData" DataSource="@userMailDataSet">
+            <GenerateColumns Range="0.." Definitions=definitions />
+        </Table>
+    </TabPane>
+</Tabs>
+
+@code {
+
+    IDictionary<Int64, (bool edit, UserInfo data)> editCache = new Dictionary<Int64, (bool edit, UserInfo data)>();
+
+    Int64 userId = 0;
+
+    List<UserInfo> userDataSet = new();
+    List<UserItem> userItemDataSet = new();
+    List<MailData> userMailDataSet = new();
+
+    string activeKey { get; set; } = "1";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await GetSession();
+    }
+
+    async Task GetSession()
+    {
+        var sessionUserId = await sessionStorage.GetItemAsync<Int64>("userid");
+        userId = sessionUserId;
+
+        var sessionUserDataSet = await sessionStorage.GetItemAsync<List<UserInfo>>("userinfo");
+        if (sessionUserDataSet != null)
+        {
+            userDataSet = sessionUserDataSet;
+            var index = userDataSet.FindIndex(item => item.UserID == userId);
+            editCache[userId] = (false, userDataSet[index]);
+        }
+
+        var sessionUserItemDataSet = await sessionStorage.GetItemAsync<List<UserItem>>("useritem");
+        if (sessionUserItemDataSet != null)
+        {
+            userItemDataSet = sessionUserItemDataSet;
+        };
+
+        var sessionUserMailDataSet = await sessionStorage.GetItemAsync<List<MailData>>("maildata");
+        if (sessionUserMailDataSet != null)
+        {
+            userMailDataSet = sessionUserMailDataSet;
+        }
+
+    }
+
+    async Task GetUserData()
+    {
+        if (await GetUserBasicInfo() == false)
+        {
+            return;
+        }
+        if (await GetUserItemList() == false)
+        {
+            return;
+        }
+        if (await GetUserMail() == false)
+        {
+            return;
+        }
+
+        await sessionStorage.SetItemAsync<Int64>("userid", userId);
+    }
+
+    async Task<bool> GetUserBasicInfo()
+    {
+        userDataSet.Clear();
+
+        var response = await UserDataService.GetUserBasicInfo(userId);
+        if (response.errorCode != ErrorCode.None)
+        {
+            if (response.errorCode == ErrorCode.Unauthorized)
+            {
+                await MoveToLogin();
+            }
+            return false;
+        }
+
+        userDataSet = response.UserInfo;
+
+        await sessionStorage.SetItemAsync<List<UserInfo>>("userinfo", userDataSet);
+
+        userDataSet.ForEach(item =>
+        {
+            editCache[item.UserID] = (false, new UserInfo
+            {
+                AccountID = item.AccountID,
+                UserID = item.UserID,
+                Level = item.Level,
+                Exp = item.Exp,
+                Money = item.Money,
+                BestClearStage = item.BestClearStage,
+                LastLogin = item.LastLogin
+            });
+        });
+
+        return true;
+    }
+
+    async Task<bool> GetUserItemList()
+    {
+        userItemDataSet.Clear();
+
+        var response = await UserDataService.GetUserItemList("UserID", userId);
+        if (response.errorCode != ErrorCode.None)
+        {
+            if (response.errorCode == ErrorCode.Unauthorized)
+            {
+                await MoveToLogin();
+            }
+            return false;
+        }
+
+        userItemDataSet = response.UserItem;
+
+        await sessionStorage.SetItemAsync<List<UserItem>>("useritem", userItemDataSet);
+
+        return true;
+    }
+
+    async Task<bool> GetUserMail()
+    {
+        userMailDataSet.Clear();
+
+        var response = await UserDataService.GetUserMailList(userId);
+        if (response.errorCode != ErrorCode.None)
+        {
+            if (response.errorCode == ErrorCode.Unauthorized)
+            {
+                await MoveToLogin();
+            }
+            return false;
+        }
+
+        userMailDataSet = response.UserMail;
+
+        await sessionStorage.SetItemAsync<List<MailData>>("maildata", userMailDataSet);
+
+        return true;
+    }
+
+    void startEdit(Int64 id)
+    {
+        editCache[id] = (true, editCache[id].data);
+    }
+
+    void cancelEdit(Int64 id)
+    {
+        var data = userDataSet.FirstOrDefault(item => item.UserID == id);
+        editCache[id].data.Level = data.Level;
+        editCache[id].data.Exp = data.Exp;
+        editCache[id].data.Money = data.Money;
+        editCache[id].data.BestClearStage = data.BestClearStage;
+        editCache[id] = (false, editCache[id].data);
+    }
+
+    async void saveEdit(Int64 id)
+    {
+        var index = userDataSet.FindIndex(item => item.UserID == id);
+        userDataSet[index].Level = editCache[id].data.Level;
+        userDataSet[index].Exp = editCache[id].data.Exp;
+        userDataSet[index].Money = editCache[id].data.Money;
+        userDataSet[index].BestClearStage = editCache[id].data.BestClearStage;
+        editCache[id] = (false, editCache[id].data);
+
+        // await UserDataService.UpdateUserBasicInfo(userDataSet[index]);
+        await sessionStorage.SetItemAsync<List<UserInfo>>("userinfo", userDataSet);
+    }
+
+    void definitions(string propertyName, object column)
+    {
+        column.SetValue("Sortable", true);
+        column.SetValue("Filterable", true);
+    }
+
+
+}
+
+

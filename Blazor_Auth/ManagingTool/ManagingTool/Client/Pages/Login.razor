@@ -1,0 +1,92 @@
+﻿@page "/"
+
+@using AntDesign.Core
+@inject UserService UserDataService
+@inject AuthService AuthService
+@inject IConfirmService ConfirmService
+@inject Blazored.SessionStorage.ISessionStorageService sessionStorage
+@inject NavigationManager NavigationManager
+
+<div style="margin-top:30vh;">
+	<GridRow Justify="center">
+		<GridCol Span="5">
+			<Card Title="Login" Style="width:100;">
+				<Body>
+					<GridRow Justify="center">
+						<AntDesign.Input Placeholder="Email" @bind-Value="@email" Size="@AntDesign.InputSize.Large">
+							<Prefix>
+								<Icon Type="user" />
+							</Prefix>
+						</AntDesign.Input>
+					</GridRow>
+					<Space />
+					<GridRow Justify="center">
+						<InputPassword Placeholder="Password" @bind-Value="@password" Size="@AntDesign.InputSize.Large">
+							<Prefix>
+								<Icon Type="lock" />
+							</Prefix>
+						</InputPassword>
+					</GridRow>
+					<Space />
+					<GridRow Justify="end">
+						<Button Type="@AntDesign.ButtonType.Primary" @onclick="OnClickLogin" Loading="loading">
+							Login
+						</Button>
+					</GridRow>
+				</Body>
+			</Card>
+		</GridCol>
+	</GridRow>
+</div>
+
+@code {
+	public string email { get; set; } = string.Empty;
+	public string password { get; set; } = string.Empty;
+
+	public bool loading { get; set; } = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var accessToken = await sessionStorage.GetItemAsync<string>("accesstoken");
+		if (accessToken == null)
+		{
+			return;
+		}
+
+		if (accessToken.Equals(""))
+		{
+			await ConfirmService.Show("세션이 만료되었습니다. 다시 로그인해주세요.", "세션 만료", ConfirmButtons.OK);
+		} else
+		{
+			NavigationManager.NavigateTo("/Lookup_Specific_User");
+		}
+	}
+
+	async Task OnClickLogin()
+	{
+		// 빈 칸이 있을 때
+		if (email.Equals("") || password.Equals(""))
+		{
+			await ConfirmService.Show("이메일과 비밀번호를 입력해주세요.", "Error", ConfirmButtons.OK);
+			return;
+		}
+
+		// Auth Service에 로그인 요청
+		loading = true;
+		var loginResult = await AuthService.Login(email, password);
+		loading = false;
+
+		// 로그인 실패
+		if (loginResult == null || loginResult.Result != ErrorCode.None)
+		{
+			await ConfirmService.Show("로그인에 실패했습니다. 이메일과 비밀번호를 다시 확인해주세요.", "Error", ConfirmButtons.OK);
+			return;
+		}
+
+		// 로그인 성공
+		await sessionStorage.SetItemAsStringAsync("accesstoken", loginResult.accessToken);
+		await sessionStorage.SetItemAsStringAsync("refreshtoken", loginResult.refreshToken);
+
+		NavigationManager.NavigateTo("/Lookup_Specific_User");
+	}
+}

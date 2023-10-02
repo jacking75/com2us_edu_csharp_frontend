@@ -1,0 +1,113 @@
+﻿@page "/SetCampaign"
+@inject DialogService DialogService
+@inject IMessageService _message
+
+<RangePicker TValue="DateTime?[]" ShowTime='@("HH:mm")' OnChange="OnRangeChange"/>
+
+<RadzenCheckBox @bind-Value="@allowVirtualization" Name="allowVirtualization" />
+<RadzenLabel Text="Allow virtualization" Component="allowVirtualization" />
+
+<RadzenDataList AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:400px;overflow:auto;" : "")"
+                WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
+                Data="@campaigns" TItem="Campaign" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true">
+    <Template Context="campaign">
+        <RadzenCard Style="width: 100%; padding: 0;">
+            <RadzenRow Gap="0">
+                <RadzenColumn Size="12" SizeLG="3" Class="rz-p-4 product-title">
+                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" class="rz-color-secondary">@(campaign.Title)</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeLG="7" Class="rz-p-4">
+                    <RadzenRow Gap="0">
+                            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" Class="rz-mb-0"></RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body2">@(campaign.Content)</RadzenText>
+                    </RadzenRow>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeLG="2" Class="rz-p-4">
+                    <RadzenButton Text="Set Campaign" Style="width: 100%" Click=@(args => SetNewCampaign(campaign)) />
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+     </Template>
+</RadzenDataList>
+
+<RadzenScheduler @ref=@scheduler SlotRender=@OnSlotRender style="height: 768px;" TItem="AppointmentData" Data=@appointments StartProperty="Start" EndProperty="End"
+                    TextProperty="Text" SelectedIndex="2"
+                    AppointmentSelect=@OnAppointmentSelect>
+    <RadzenDayView />
+    <RadzenWeekView />
+    <RadzenMonthView />
+    <RadzenYearView />
+</RadzenScheduler>
+
+<EventConsole @ref=@console />
+
+ @code {
+    bool allowVirtualization = false;
+
+    RadzenScheduler<AppointmentData> scheduler;
+    EventConsole console;
+
+    List<DateTime> period = new List<DateTime>();
+    List<Campaign> campaigns = new List<Campaign>();
+    IList<AppointmentData> appointments = new List<AppointmentData>();
+
+    protected override Task OnInitializedAsync()
+    {
+        campaigns.Add(new Campaign { Title = "여름방학 이벤트", Content = "캠페인 기간동안 사냥 획득 경험치 30% 상승", CampaignType = 1, BoostValue = 0.3 });
+        campaigns.Add(new Campaign { Title = "점심 이벤트", Content = "기간내 접속시 재화 지급", CampaignType = 2, CampaignItemCode = 1, CampaignItemCount = 1000 });
+        campaigns.Add(new Campaign { Title = "신규 이벤트", Content = "기간내 최초 접속시 아이템 지급", CampaignType = 2, CampaignItemCode = 2, CampaignItemCount = 1 });
+        campaigns.Add(new Campaign { Title = "특별 경험치 버닝", Content = "캠페인 기간동안 사냥 획득 경험치 200% 상승", CampaignType = 1, BoostValue = 2 });
+
+        appointments.Add(new AppointmentData { Start = DateTime.Today, End = DateTime.Now.AddDays(7), Text = "신규 이벤트" });
+
+        return base.OnInitializedAsync();
+    }
+
+    void OnRangeChange(DateRangeChangedEventArgs args)
+    {
+        period.Add(args.Dates[0].Value);
+        period.Add(args.Dates[1].Value);
+    }
+
+    async Task SetNewCampaign(Campaign campaign)
+    {
+        if (period == null || period.Count == 0)
+        {
+            await _message.Error("기간을 설정해주세요.");
+            return;
+        };
+
+        AppointmentData data = new AppointmentData
+        {
+            Start = period[0],
+            End = period[1],
+            Text = campaign.Title
+        };
+
+        if (data != null)
+        {
+            appointments.Add(data);
+            await scheduler.Reload();
+        }
+
+        console.Log($"New Campaign={data.Text}:{data.Start}~{data.End}");
+        await _message.Success("Success!");
+    }
+
+    void OnSlotRender(SchedulerSlotRenderEventArgs args)
+    {
+        if (args.View.Text == "Month" && args.Start.Date == DateTime.Today)
+        {
+            args.Attributes["style"] = "background: rgba(255,220,40,.2);";
+        }
+    }
+
+    async Task OnAppointmentSelect(SchedulerAppointmentSelectEventArgs<AppointmentData> args)
+    {
+        console.Log($"AppointmentSelect: Appointment={args.Data.Text}");
+
+        await DialogService.OpenAsync<EditAppointmentPage>("Edit Appointment", new Dictionary<string, object> { { "Appointment", args.Data } });
+
+        await scheduler.Reload();
+    }
+}

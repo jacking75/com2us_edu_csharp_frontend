@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerComposeProjectPath>docker-compose.dcproj</DockerComposeProjectPath>
+    <UserSecretsId>8f092c91-4c5f-4997-832e-5bbf6f5ef081</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CloudStructures" Version="3.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.7" />
+    <PackageReference Include="MySql.Data" Version="8.0.33" />
+    <PackageReference Include="MySqlConnector" Version="2.2.6" />
+    <PackageReference Include="SqlKata" Version="2.4.0" />
+    <PackageReference Include="SqlKata.Execution" Version="2.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="ZLogger" Version="1.7.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.5" />
+    <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
+    <PackageReference Include="IdGen" Version="3.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Middleware\" />
+    <None Remove="Controllers\MailController\" />
+    <None Remove="RequestResponse\Mail_ReqRes\" />
+    <None Remove="Controllers\DungeonController\" />
+    <None Remove="ReqRes\Dungeon_ReqRes\" />
+    <None Remove="DbOperations\GameDb\" />
+    <None Remove="DbOperations\RedisDb\" />
+    <None Remove="log\" />
+
+
+	  <None Remove="Controllers\AttendanceController\" />
+    <None Remove="ReqRes\Attendance_ReqRes\" />
+    <None Remove="Controllers\ChatController\" />
+    <None Remove="ReqRes\Chat_ReqRes\" />
+    <None Remove="Controllers\EnhanceController\" />
+    <None Remove="Controllers\InAppController\" />
+    <None Remove="ReqRes\Enhance_ReqRes\" />
+    <None Remove="ReqRes\InApp_ReqRes\" />
+    <None Remove="DbOperations\MasterDb\" />
+    <None Remove="DbOperations\AccountDb\" />
+    <None Remove="Util\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Middleware\" />
+    <Folder Include="Controllers\MailController\" />
+    <Folder Include="ReqRes\Mail_ReqRes\" />
+    <Folder Include="Controllers\DungeonController\" />
+    <Folder Include="ReqRes\Dungeon_ReqRes\" />
+    <Folder Include="DbOperations\RedisDb\" />
+    <Folder Include="log\" />
+    <Folder Include="Controllers\AttendanceController\" />
+    <Folder Include="ReqRes\Attendance_ReqRes\" />
+    <Folder Include="Controllers\ChatController\" />
+    <Folder Include="ReqRes\Chat_ReqRes\" />
+    <Folder Include="Controllers\EnhanceController\" />
+    <Folder Include="Controllers\InAppController\" />
+    <Folder Include="ReqRes\Enhance_ReqRes\" />
+    <Folder Include="ReqRes\InApp_ReqRes\" />
+    <Folder Include="DbOperations\AccountDb\" />
+    <Folder Include="Util\" />
+  </ItemGroup>
+</Project>
